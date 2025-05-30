@@ -1,54 +1,61 @@
-# React + TypeScript + Vite
+# Cosmetix
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Cosmetix é uma plataforma inteligente que ajuda você a descobrir os produtos de beleza ideais para sua pele e cabelo, eliminando o desperdício de tempo e dinheiro com tentativas e erros. Utilizando tecnologia de análise personalizada, oferecemos recomendações baseadas em ciência, dados reais e colaboração com especialistas.
 
-Currently, two official plugins are available:
+## Funcionalidades
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Teste Personalizado:** Responda perguntas rápidas sobre seu perfil e rotina de beleza.
+- **Recomendações Inteligentes:** Algoritmo analisa suas respostas e sugere produtos sob medida.
+- **Resultados Confiáveis:** Indicações baseadas em dados, ciência e satisfação de milhares de usuárias.
+- **Interface Moderna:** Design responsivo, intuitivo e otimizado para dispositivos móveis.
 
-## Expanding the ESLint configuration
+## Tecnologias Utilizadas
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- [Vite](https://vitejs.dev/) para build e desenvolvimento rápido
+- [Tailwind CSS](https://tailwindcss.com/) para estilização moderna
+- [Lucide React](https://lucide.dev/) para ícones
+- [ESLint](https://eslint.org/) para padronização e qualidade do código
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Como rodar o projeto
+
+1. **Instale as dependências:**
+   ```sh
+   npm install
+   ```
+
+2. **Inicie o servidor de desenvolvimento:**
+   ```sh
+   npm run dev
+   ```
+
+3. **Abra no navegador:**  
+   [http://localhost:5173](http://localhost:5173)
+
+## Scripts Disponíveis
+
+- `npm run dev` — Inicia o ambiente de desenvolvimento.
+- `npm run build` — Gera a build de produção.
+- `npm run preview` — Visualiza a build de produção localmente.
+- `npm run lint` — Executa o linter.
+
+## Estrutura do Projeto
+
+```
+src/
+  App.tsx
+  main.tsx
+  index.css
+  assets/
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Contribuição
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Contribuições são bem-vindas! Abra uma issue ou pull request.
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+## Licença
+
+Projeto privado. Todos os direitos reservados à equipe Cosmetix.
+
+---
+Feito com 💖 por Cosmetix.
