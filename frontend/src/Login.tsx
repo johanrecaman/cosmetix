@@ -3,9 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { ArrowLeft } from "lucide-react"
-
-
+import { ArrowLeft, Eye, EyeOff } from "lucide-react"
 
 function CosmetixLogo({ className }: { className?: string }) {
   return (
@@ -68,27 +66,184 @@ function CosmetixLogo({ className }: { className?: string }) {
   )
 }
 
-// Adicionar navegação para cadastro na interface
 interface LoginProps {
   onBackToHome: () => void
   onNavigateToRegister: () => void
+  onLoginSuccess?: (userData: any) => void
 }
 
-// Atualizar a função do componente para aceitar o novo prop
-export default function Login({ onBackToHome, onNavigateToRegister }: LoginProps) {
+// Configuração da API
+const API_BASE_URL = 'http://localhost:8080'
+
+export default function Login({ onBackToHome, onNavigateToRegister, onLoginSuccess }: LoginProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [rememberMe, setRememberMe] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  }
+
+  const authenticateUser = async (email: string, password: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const userData = await response.json()
+      return userData
+    } catch (error) {
+      console.error('Erro na autenticação:', error)
+      throw error
+    }
+  }
+
+  const handleSubmit = async () => {
+    setError("")
+    
+    // Validações básicas
+    if (!email || !password) {
+      setError("Por favor, preencha todos os campos")
+      return
+    }
+
+    if (!validateEmail(email)) {
+      setError("Por favor, insira um email válido")
+      return
+    }
+
+    if (password.length < 3) {
+      setError("A senha deve ter pelo menos 3 caracteres")
+      return
+    }
+
     setIsLoading(true)
 
-    // Simular login
-    setTimeout(() => {
+    try {
+      const userData = await authenticateUser(email, password)
+      
+      // Sucesso no login
+      const userSession = {
+        ...userData,
+        loginTime: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + (rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000)).toISOString()
+      }
+
+      console.log("Login realizado com sucesso:", userSession)
+      
+      // Callback para o componente pai com os dados do usuário
+      if (onLoginSuccess) {
+        onLoginSuccess(userSession)
+      } else {
+        // Fallback: redirecionar para página inicial
+        onBackToHome()
+      }
+      
+    } catch (error) {
+      console.error('Erro no login:', error)
+      
+      // Tratar diferentes tipos de erro
+      if (error instanceof Error) {
+        if (error.message.includes('401')) {
+          setError("Email ou senha incorretos")
+        } else if (error.message.includes('404')) {
+          setError("Usuário não encontrado")
+        } else if (error.message.includes('500')) {
+          setError("Erro interno do servidor. Tente novamente mais tarde.")
+        } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
+          setError("Erro de conexão. Verifique se o servidor está rodando.")
+        } else {
+          setError("Erro inesperado. Tente novamente.")
+        }
+      } else {
+        setError("Erro de conexão com o servidor")
+      }
+    } finally {
       setIsLoading(false)
-      alert("Login realizado com sucesso!")
-    }, 1500)
+    }
+  }
+
+  const handleSocialLogin = async (provider: string) => {
+    setIsLoading(true)
+    setError("")
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/auth/${provider.toLowerCase()}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const userData = await response.json()
+      
+      const userSession = {
+        ...userData,
+        loginTime: new Date().toISOString(),
+        provider: provider,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      }
+
+      console.log(`Login via ${provider} realizado:`, userSession)
+      
+      if (onLoginSuccess) {
+        onLoginSuccess(userSession)
+      } else {
+        onBackToHome()
+      }
+      
+    } catch (error) {
+      console.error(`Erro no login via ${provider}:`, error)
+      setError(`Erro ao fazer login com ${provider}. Tente novamente.`)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Digite seu email primeiro para recuperar a senha")
+      return
+    }
+    
+    if (!validateEmail(email)) {
+      setError("Digite um email válido para recuperar a senha")
+      return
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      if (response.ok) {
+        alert(`Um email de recuperação foi enviado para: ${email}`)
+      } else {
+        setError("Erro ao enviar email de recuperação. Tente novamente.")
+      }
+    } catch (error) {
+      console.error('Erro ao solicitar recuperação de senha:', error)
+      setError("Erro de conexão. Verifique se o servidor está rodando.")
+    }
   }
 
   return (
@@ -117,8 +272,22 @@ export default function Login({ onBackToHome, onNavigateToRegister }: LoginProps
             <p className="text-gray-600">Acesse sua conta para ver suas recomendações personalizadas</p>
           </div>
 
+          {/* Informações sobre o backend */}
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm">
+            <p className="text-green-800 font-medium mb-1">🚀 Conectado ao Backend</p>
+            <p className="text-green-700">
+              <strong>Endpoint:</strong> http://localhost:8080/users/login
+            </p>
+          </div>
+
           <div className="bg-white/90 backdrop-blur-sm p-8 rounded-lg shadow-xl border border-pink-100">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            )}
+
+            <div className="space-y-6">
               <div className="space-y-2">
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Email
@@ -139,28 +308,62 @@ export default function Login({ onBackToHome, onNavigateToRegister }: LoginProps
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                     Senha
                   </label>
-                  <button type="button" className="text-sm text-pink-500 hover:text-pink-600 transition-colors">
+                  <button 
+                    type="button" 
+                    onClick={handleForgotPassword}
+                    className="text-sm text-pink-500 hover:text-pink-600 transition-colors"
+                  >
                     Esqueceu a senha?
                   </button>
                 </div>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 pr-10 border border-pink-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center">
                 <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 border border-pink-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400 transition-colors"
+                  id="remember-me"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 text-pink-400 focus:ring-pink-400 border-pink-200 rounded"
                 />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  Lembrar de mim por 7 dias
+                </label>
               </div>
 
               <button
-                type="submit"
+                type="button"
+                onClick={handleSubmit}
                 disabled={isLoading}
                 className="w-full bg-gradient-to-r from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500 text-white font-semibold py-3 px-4 rounded-md shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? "Entrando..." : "Entrar"}
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Entrando...
+                  </div>
+                ) : (
+                  "Entrar"
+                )}
               </button>
-            </form>
+            </div>
 
             <div className="mt-6">
               <div className="relative">
@@ -175,13 +378,17 @@ export default function Login({ onBackToHome, onNavigateToRegister }: LoginProps
               <div className="mt-6 grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  className="inline-flex justify-center items-center px-4 py-2 border border-pink-200 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-pink-50 transition-colors"
+                  onClick={() => handleSocialLogin('Google')}
+                  disabled={isLoading}
+                  className="inline-flex justify-center items-center px-4 py-2 border border-pink-200 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-pink-50 transition-colors disabled:opacity-50"
                 >
                   Google
                 </button>
                 <button
                   type="button"
-                  className="inline-flex justify-center items-center px-4 py-2 border border-pink-200 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-pink-50 transition-colors"
+                  onClick={() => handleSocialLogin('Facebook')}
+                  disabled={isLoading}
+                  className="inline-flex justify-center items-center px-4 py-2 border border-pink-200 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-pink-50 transition-colors disabled:opacity-50"
                 >
                   Facebook
                 </button>
