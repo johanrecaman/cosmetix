@@ -73,7 +73,7 @@ interface LoginProps {
 }
 
 // Configuração da API
-const API_BASE_URL = 'http://localhost:8080'
+const API_BASE_URL = 'http://localhost:8000'
 
 export default function Login({ onBackToHome, onNavigateToRegister, onLoginSuccess }: LoginProps) {
   const [email, setEmail] = useState("")
@@ -89,7 +89,7 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
 
   const authenticateUser = async (email: string, password: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/users/login`, {
+      const response = await fetch(`${API_BASE_URL}/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
