@@ -180,7 +180,7 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
         } else if (error.message.includes("500")) {
           setError("Erro interno do servidor. Tente novamente mais tarde.")
         } else if (error.message.includes("NetworkError") || error.message.includes("fetch")) {
-          setError("Erro de conexão. Verifique se o servidor está rodando na porta 8000.")
+          setError("Erro de conexão.")
         } else {
           setError("Erro inesperado. Tente novamente.")
         }
@@ -241,26 +241,6 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
               <span className="text-gray-800">.</span>
             </h1>
             <p className="text-gray-600">Acesse sua conta para ver suas recomendações personalizadas</p>
-          </div>
-
-          {/* Informações sobre o backend */}
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm">
-            <p className="text-green-800 font-medium mb-1">🚀 Conectado ao Backend</p>
-            <p className="text-green-700">
-              <strong>Endpoint:</strong> http://localhost:8000/users
-              <br />
-              <strong>Método:</strong> GET (busca todos os usuários para autenticação)
-            </p>
-          </div>
-
-          {/* Aviso sobre cadastro */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-            <p className="text-blue-800 font-medium mb-1">💡 Para fazer login:</p>
-            <p className="text-blue-700">
-              Você precisa ter um usuário cadastrado no banco de dados.
-              <br />
-              Use a tela de cadastro ou insira um usuário diretamente no MySQL.
-            </p>
           </div>
 
           <div className="bg-white/90 backdrop-blur-sm p-8 rounded-lg shadow-xl border border-pink-100">
