@@ -73,9 +73,9 @@ interface RegisterProps {
 
 export default function Register({ onBackToHome, onNavigateToLogin }: RegisterProps) {
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
+    user_name: "",
+    user_email: "",
+    user_password: "",
     confirmPassword: "",
   })
   const [showPassword, setShowPassword] = useState(false)
@@ -95,25 +95,25 @@ export default function Register({ onBackToHome, onNavigateToLogin }: RegisterPr
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Nome é obrigatório"
+    if (!formData.user_name.trim()) {
+      newErrors.user_name = "Nome é obrigatório"
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email é obrigatório"
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email inválido"
+    if (!formData.user_email.trim()) {
+      newErrors.user_email = "Email é obrigatório"
+    } else if (!/\S+@\S+\.\S+/.test(formData.user_email)) {
+      newErrors.user_email = "Email inválido"
     }
 
-    if (!formData.password) {
-      newErrors.password = "Senha é obrigatória"
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Senha deve ter pelo menos 6 caracteres"
+    if (!formData.user_password) {
+      newErrors.user_password = "Senha é obrigatória"
+    } else if (formData.user_password.length < 6) {
+      newErrors.user_password = "Senha deve ter pelo menos 6 caracteres"
     }
 
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = "Confirmação de senha é obrigatória"
-    } else if (formData.password !== formData.confirmPassword) {
+    } else if (formData.user_password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Senhas não coincidem"
     }
 
@@ -130,11 +130,51 @@ export default function Register({ onBackToHome, onNavigateToLogin }: RegisterPr
 
     setIsLoading(true)
 
-    // Simular cadastro
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      const response = await fetch('http://localhost:8000/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_name: formData.user_name,
+          user_email: formData.user_email,
+          user_password: formData.user_password,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Erro ao criar conta')
+      }
+
+      const userData = await response.json()
       alert("Cadastro realizado com sucesso! Bem-vindo à Cosmetix!")
-    }, 2000)
+      
+      // Limpar formulário após sucesso
+      setFormData({
+        user_name: "",
+        user_email: "",
+        user_password: "",
+        confirmPassword: "",
+      })
+      
+    } catch (error) {
+      console.error('Erro no cadastro:', error)
+      
+      if (error instanceof Error) {
+        // Verificar se é erro de email já existente
+        if (error.message.includes('email') || error.message.includes('já existe')) {
+          setErrors({ user_email: 'Este email já está cadastrado' })
+        } else {
+          alert(`Erro ao criar conta: ${error.message}`)
+        }
+      } else {
+        alert('Erro ao criar conta. Verifique sua conexão e tente novamente.')
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -166,59 +206,59 @@ export default function Register({ onBackToHome, onNavigateToLogin }: RegisterPr
           <div className="bg-white/90 backdrop-blur-sm p-8 rounded-lg shadow-xl border border-pink-100">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="user_name" className="block text-sm font-medium text-gray-700">
                   Nome completo
                 </label>
                 <input
-                  id="name"
-                  name="name"
+                  id="user_name"
+                  name="user_name"
                   type="text"
-                  value={formData.name}
+                  value={formData.user_name}
                   onChange={handleInputChange}
                   placeholder="Seu nome completo"
                   className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-                    errors.name
+                    errors.user_name
                       ? "border-red-300 focus:border-red-400 focus:ring-red-400"
                       : "border-pink-200 focus:border-pink-400 focus:ring-pink-400"
                   }`}
                 />
-                {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
+                {errors.user_name && <p className="text-sm text-red-600">{errors.user_name}</p>}
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="user_email" className="block text-sm font-medium text-gray-700">
                   Email
                 </label>
                 <input
-                  id="email"
-                  name="email"
+                  id="user_email"
+                  name="user_email"
                   type="email"
-                  value={formData.email}
+                  value={formData.user_email}
                   onChange={handleInputChange}
                   placeholder="seu@email.com"
                   className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-                    errors.email
+                    errors.user_email
                       ? "border-red-300 focus:border-red-400 focus:ring-red-400"
                       : "border-pink-200 focus:border-pink-400 focus:ring-pink-400"
                   }`}
                 />
-                {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
+                {errors.user_email && <p className="text-sm text-red-600">{errors.user_email}</p>}
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="user_password" className="block text-sm font-medium text-gray-700">
                   Senha
                 </label>
                 <div className="relative">
                   <input
-                    id="password"
-                    name="password"
+                    id="user_password"
+                    name="user_password"
                     type={showPassword ? "text" : "password"}
-                    value={formData.password}
+                    value={formData.user_password}
                     onChange={handleInputChange}
                     placeholder="Mínimo 6 caracteres"
                     className={`w-full px-3 py-2 pr-10 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-                      errors.password
+                      errors.user_password
                         ? "border-red-300 focus:border-red-400 focus:ring-red-400"
                         : "border-pink-200 focus:border-pink-400 focus:ring-pink-400"
                     }`}
@@ -231,7 +271,7 @@ export default function Register({ onBackToHome, onNavigateToLogin }: RegisterPr
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {errors.password && <p className="text-sm text-red-600">{errors.password}</p>}
+                {errors.user_password && <p className="text-sm text-red-600">{errors.user_password}</p>}
               </div>
 
               <div className="space-y-2">

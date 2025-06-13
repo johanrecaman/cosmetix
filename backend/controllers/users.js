@@ -17,6 +17,7 @@ export function get_user(req, res) {
 
 export function create_user(req, res) {
   const { user_name, user_email, user_password } = req.body;
+  console.log('Creating user:', { user_name, user_email, user_password });
   const q = 'INSERT INTO users (user_name, user_email, user_password) VALUES (?, ?, ?)';
   db.query(q, [user_name, user_email, user_password], (err, result) => {
     if (err) return res.status(500).json(err);

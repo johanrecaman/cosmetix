@@ -89,20 +89,41 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
 
   const authenticateUser = async (email: string, password: string) => {
     try {
+      // Primeiro, buscar todos os usuários e filtrar localmente
+      // (já que não há endpoint específico de login)
       const response = await fetch(`${API_BASE_URL}/users`, {
-        method: 'POST',
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+        }
       })
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      const userData = await response.json()
-      return userData
+      const users = await response.json()
+      
+      // Encontrar usuário pelo email
+      const user = users.find((u: any) => u.user_email.toLowerCase() === email.toLowerCase())
+      
+      if (!user) {
+        throw new Error('User not found')
+      }
+
+      // Validar senha (em produção, isso deveria ser feito no backend com hash)
+      if (user.user_password !== password) {
+        throw new Error('Invalid password')
+      }
+
+      // Retornar dados do usuário (sem a senha)
+      const { user_password, ...userWithoutPassword } = user
+      return {
+        id: user.user_id,
+        name: user.user_name,
+        email: user.user_email,
+        ...userWithoutPassword
+      }
     } catch (error) {
       console.error('Erro na autenticação:', error)
       throw error
@@ -155,14 +176,14 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
       
       // Tratar diferentes tipos de erro
       if (error instanceof Error) {
-        if (error.message.includes('401')) {
-          setError("Email ou senha incorretos")
-        } else if (error.message.includes('404')) {
+        if (error.message.includes('User not found')) {
           setError("Usuário não encontrado")
+        } else if (error.message.includes('Invalid password')) {
+          setError("Senha incorreta")
         } else if (error.message.includes('500')) {
           setError("Erro interno do servidor. Tente novamente mais tarde.")
         } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
-          setError("Erro de conexão. Verifique se o servidor está rodando.")
+          setError("Erro de conexão. Verifique se o servidor está rodando na porta 8000.")
         } else {
           setError("Erro inesperado. Tente novamente.")
         }
@@ -178,41 +199,10 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
     setIsLoading(true)
     setError("")
     
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/auth/${provider.toLowerCase()}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const userData = await response.json()
-      
-      const userSession = {
-        ...userData,
-        loginTime: new Date().toISOString(),
-        provider: provider,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      }
-
-      console.log(`Login via ${provider} realizado:`, userSession)
-      
-      if (onLoginSuccess) {
-        onLoginSuccess(userSession)
-      } else {
-        onBackToHome()
-      }
-      
-    } catch (error) {
-      console.error(`Erro no login via ${provider}:`, error)
-      setError(`Erro ao fazer login com ${provider}. Tente novamente.`)
-    } finally {
-      setIsLoading(false)
-    }
+    // Login social não está implementado no backend atual
+    // Desabilitar por enquanto
+    setError(`Login via ${provider} não está disponível no momento`)
+    setIsLoading(false)
   }
 
   const handleForgotPassword = async () => {
@@ -226,24 +216,8 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
       return
     }
     
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/forgot-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      })
-
-      if (response.ok) {
-        alert(`Um email de recuperação foi enviado para: ${email}`)
-      } else {
-        setError("Erro ao enviar email de recuperação. Tente novamente.")
-      }
-    } catch (error) {
-      console.error('Erro ao solicitar recuperação de senha:', error)
-      setError("Erro de conexão. Verifique se o servidor está rodando.")
-    }
+    // Recuperação de senha não está implementada no backend atual
+    alert(`Funcionalidade de recuperação de senha será implementada em breve para: ${email}`)
   }
 
   return (
@@ -276,7 +250,17 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm">
             <p className="text-green-800 font-medium mb-1">🚀 Conectado ao Backend</p>
             <p className="text-green-700">
-              <strong>Endpoint:</strong> http://localhost:8080/users/login
+              <strong>Endpoint:</strong> http://localhost:8000/users<br />
+              <strong>Método:</strong> GET (busca todos os usuários para autenticação)
+            </p>
+          </div>
+
+          {/* Aviso sobre cadastro */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+            <p className="text-blue-800 font-medium mb-1">💡 Para fazer login:</p>
+            <p className="text-blue-700">
+              Você precisa ter um usuário cadastrado no banco de dados.<br />
+              Use a tela de cadastro ou insira um usuário diretamente no MySQL.
             </p>
           </div>
 
@@ -379,18 +363,18 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
                 <button
                   type="button"
                   onClick={() => handleSocialLogin('Google')}
-                  disabled={isLoading}
-                  className="inline-flex justify-center items-center px-4 py-2 border border-pink-200 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-pink-50 transition-colors disabled:opacity-50"
+                  disabled={true}
+                  className="inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-400 bg-gray-100 cursor-not-allowed"
                 >
-                  Google
+                  Google (Em breve)
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSocialLogin('Facebook')}
-                  disabled={isLoading}
-                  className="inline-flex justify-center items-center px-4 py-2 border border-pink-200 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-pink-50 transition-colors disabled:opacity-50"
+                  disabled={true}
+                  className="inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-400 bg-gray-100 cursor-not-allowed"
                 >
-                  Facebook
+                  Facebook (Em breve)
                 </button>
               </div>
             </div>
