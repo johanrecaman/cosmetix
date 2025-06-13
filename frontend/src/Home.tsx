@@ -1,10 +1,12 @@
 "use client"
 
-import { ArrowRight, CheckCircle, Clock, DollarSign, Sparkles, Heart, Shield } from "lucide-react"
+import { useState, useEffect } from "react"
+import { ArrowRight, CheckCircle, Clock, DollarSign, Sparkles, Heart, Shield, User } from "lucide-react"
+import ProductRecommendationsHome from "./ProductRecommendationsHome"
 
-function CosmetixLogo({ className }: { className?: string }) {
+function CosmetixLogo({ className, onClick }: { className?: string; onClick?: () => void }) {
   return (
-    <div className={`flex items-center space-x-2 ${className}`}>
+    <div className={`flex items-center space-x-2 cursor-pointer ${className}`} onClick={onClick}>
       <div className="relative">
         <svg viewBox="0 0 40 40" className="h-10 w-10" fill="none" xmlns="http://www.w3.org/2000/svg">
           {/* Outer petals */}
@@ -63,34 +65,96 @@ function CosmetixLogo({ className }: { className?: string }) {
   )
 }
 
-// Atualizar a interface para incluir navegação para cadastro
+interface UserType {
+  id: number
+  name: string
+  email: string
+}
+
 interface CosmetixLandingProps {
   onNavigateToLogin: () => void
   onNavigateToRegister: () => void
+  onNavigateToProfile: () => void
+  user: UserType | null
 }
 
-// Atualizar a função do componente
-export default function CosmetixLanding({ onNavigateToLogin, onNavigateToRegister }: CosmetixLandingProps) {
+export default function CosmetixLanding({
+  onNavigateToLogin,
+  onNavigateToRegister,
+  onNavigateToProfile,
+  user,
+}: CosmetixLandingProps) {
+  const [userHasCompletedQuiz, setUserHasCompletedQuiz] = useState(false)
+  const [isCheckingQuiz, setIsCheckingQuiz] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      checkUserQuizStatus()
+    }
+  }, [user])
+
+  const checkUserQuizStatus = async () => {
+    if (!user) return
+
+    setIsCheckingQuiz(true)
+    try {
+      const response = await fetch("http://localhost:8000/traits")
+      const allTraits = await response.json()
+      const userTraits = allTraits.find((trait: any) => trait.traits_user_id === user.id)
+      setUserHasCompletedQuiz(!!userTraits)
+    } catch (error) {
+      console.error("Error checking quiz status:", error)
+    } finally {
+      setIsCheckingQuiz(false)
+    }
+  }
+
+  const handleMainCTA = () => {
+    if (!user) {
+      onNavigateToRegister()
+    } else if (userHasCompletedQuiz) {
+      onNavigateToProfile()
+    } else {
+      onNavigateToProfile() // Will redirect to quiz tab
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
       {/* Header */}
       <header className="px-4 py-6 md:px-6">
         <div className="container mx-auto flex items-center justify-between">
-          <CosmetixLogo />
-          {/* No header, substituir o botão "Entrar" por: */}
+          <CosmetixLogo onClick={() => window.location.reload()} />
           <div className="flex items-center space-x-3">
-            <button
-              onClick={onNavigateToLogin}
-              className="inline-flex items-center justify-center rounded-md border border-pink-200 bg-white px-4 py-2 text-sm font-medium text-pink-400 shadow-sm transition-colors hover:bg-pink-50 hover:text-pink-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2"
-            >
-              Entrar
-            </button>
-            <button
-              onClick={onNavigateToRegister}
-              className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-pink-300 to-purple-300 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:from-pink-400 hover:to-purple-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2"
-            >
-              Cadastrar
-            </button>
+            {user ? (
+              // Mostrar quando logado
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-gray-600 hidden sm:block">Olá, {user.name.split(" ")[0]}!</span>
+                <button
+                  onClick={onNavigateToProfile}
+                  className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-pink-300 to-purple-300 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:from-pink-400 hover:to-purple-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2"
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  Meu Perfil
+                </button>
+              </div>
+            ) : (
+              // Mostrar quando não logado
+              <>
+                <button
+                  onClick={onNavigateToLogin}
+                  className="inline-flex items-center justify-center rounded-md border border-pink-200 bg-white px-4 py-2 text-sm font-medium text-pink-400 shadow-sm transition-colors hover:bg-pink-50 hover:text-pink-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2"
+                >
+                  Entrar
+                </button>
+                <button
+                  onClick={onNavigateToRegister}
+                  className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-pink-300 to-purple-300 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:from-pink-400 hover:to-purple-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2"
+                >
+                  Cadastrar
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -114,9 +178,26 @@ export default function CosmetixLanding({ onNavigateToLogin, onNavigateToRegiste
               gastar dinheiro à toa.
             </p>
             <div className="flex flex-col items-center space-y-4 sm:flex-row sm:justify-center sm:space-x-4 sm:space-y-0">
-              <button className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-pink-300 to-purple-300 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:from-pink-400 hover:to-purple-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2">
-                Fazer meu teste
-                <ArrowRight className="ml-2 h-5 w-5" />
+              <button
+                onClick={handleMainCTA}
+                disabled={isCheckingQuiz}
+                className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-pink-300 to-purple-300 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:from-pink-400 hover:to-purple-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2 disabled:opacity-50"
+              >
+                {isCheckingQuiz ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Carregando...
+                  </>
+                ) : user ? (
+                  userHasCompletedQuiz ? (
+                    "Ver minhas recomendações"
+                  ) : (
+                    "Fazer meu teste"
+                  )
+                ) : (
+                  "Começar agora"
+                )}
+                {!isCheckingQuiz && <ArrowRight className="ml-2 h-5 w-5" />}
               </button>
               <p className="text-sm text-gray-500">✨ Gratuito e leva só 3 minutos</p>
             </div>
@@ -363,6 +444,9 @@ export default function CosmetixLanding({ onNavigateToLogin, onNavigateToRegiste
         </div>
       </section>
 
+      {/* Recomendações personalizadas para usuários logados */}
+      {user && userHasCompletedQuiz && <ProductRecommendationsHome user={user} />}
+
       {/* CTA Final */}
       <section className="px-4 py-16 md:px-6 bg-gradient-to-r from-pink-200/70 to-purple-200/70">
         <div className="container mx-auto text-center">
@@ -374,9 +458,26 @@ export default function CosmetixLanding({ onNavigateToLogin, onNavigateToRegiste
               Faça o teste agora e receba recomendações personalizadas para sua rotina de beleza.
             </p>
             <div className="flex flex-col items-center space-y-4 sm:flex-row sm:justify-center sm:space-x-4 sm:space-y-0">
-              <button className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-pink-300 to-purple-300 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:from-pink-400 hover:to-purple-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2">
-                Fazer meu teste gratuito
-                <ArrowRight className="ml-2 h-5 w-5" />
+              <button
+                onClick={handleMainCTA}
+                disabled={isCheckingQuiz}
+                className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-pink-300 to-purple-300 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:from-pink-400 hover:to-purple-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-2 disabled:opacity-50"
+              >
+                {isCheckingQuiz ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Carregando...
+                  </>
+                ) : user ? (
+                  userHasCompletedQuiz ? (
+                    "Ver minhas recomendações"
+                  ) : (
+                    "Fazer meu teste gratuito"
+                  )
+                ) : (
+                  "Começar agora"
+                )}
+                {!isCheckingQuiz && <ArrowRight className="ml-2 h-5 w-5" />}
               </button>
               <p className="text-sm text-gray-600">✨ Sem compromisso • Resultados em 3 minutos</p>
             </div>
@@ -388,7 +489,7 @@ export default function CosmetixLanding({ onNavigateToLogin, onNavigateToRegiste
       <footer className="px-4 py-8 md:px-6 bg-white">
         <div className="container mx-auto">
           <div className="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
-            <CosmetixLogo />
+            <CosmetixLogo onClick={() => window.location.reload()} />
             <p className="text-sm text-gray-600">© 2024 Cosmetix. Todos os direitos reservados.</p>
             <div className="flex space-x-6">
               <a href="#" className="text-sm text-gray-600 hover:text-pink-400 transition-colors">
@@ -407,3 +508,4 @@ export default function CosmetixLanding({ onNavigateToLogin, onNavigateToRegiste
     </div>
   )
 }
+

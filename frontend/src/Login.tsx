@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { ArrowLeft, Eye, EyeOff } from "lucide-react"
 
@@ -73,7 +71,7 @@ interface LoginProps {
 }
 
 // Configuração da API
-const API_BASE_URL = 'http://localhost:8000'
+const API_BASE_URL = "http://localhost:8000"
 
 export default function Login({ onBackToHome, onNavigateToRegister, onLoginSuccess }: LoginProps) {
   const [email, setEmail] = useState("")
@@ -92,10 +90,10 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
       // Primeiro, buscar todos os usuários e filtrar localmente
       // (já que não há endpoint específico de login)
       const response = await fetch(`${API_BASE_URL}/users`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-        }
+          "Content-Type": "application/json",
+        },
       })
 
       if (!response.ok) {
@@ -103,17 +101,17 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
       }
 
       const users = await response.json()
-      
+
       // Encontrar usuário pelo email
       const user = users.find((u: any) => u.user_email.toLowerCase() === email.toLowerCase())
-      
+
       if (!user) {
-        throw new Error('User not found')
+        throw new Error("User not found")
       }
 
       // Validar senha (em produção, isso deveria ser feito no backend com hash)
       if (user.user_password !== password) {
-        throw new Error('Invalid password')
+        throw new Error("Invalid password")
       }
 
       // Retornar dados do usuário (sem a senha)
@@ -122,17 +120,17 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
         id: user.user_id,
         name: user.user_name,
         email: user.user_email,
-        ...userWithoutPassword
+        ...userWithoutPassword,
       }
     } catch (error) {
-      console.error('Erro na autenticação:', error)
+      console.error("Erro na autenticação:", error)
       throw error
     }
   }
 
   const handleSubmit = async () => {
     setError("")
-    
+
     // Validações básicas
     if (!email || !password) {
       setError("Por favor, preencha todos os campos")
@@ -153,16 +151,16 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
 
     try {
       const userData = await authenticateUser(email, password)
-      
+
       // Sucesso no login
       const userSession = {
         ...userData,
         loginTime: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + (rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000)).toISOString()
+        expiresAt: new Date(Date.now() + (rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000)).toISOString(),
       }
 
       console.log("Login realizado com sucesso:", userSession)
-      
+
       // Callback para o componente pai com os dados do usuário
       if (onLoginSuccess) {
         onLoginSuccess(userSession)
@@ -170,19 +168,18 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
         // Fallback: redirecionar para página inicial
         onBackToHome()
       }
-      
     } catch (error) {
-      console.error('Erro no login:', error)
-      
+      console.error("Erro no login:", error)
+
       // Tratar diferentes tipos de erro
       if (error instanceof Error) {
-        if (error.message.includes('User not found')) {
+        if (error.message.includes("User not found")) {
           setError("Usuário não encontrado")
-        } else if (error.message.includes('Invalid password')) {
+        } else if (error.message.includes("Invalid password")) {
           setError("Senha incorreta")
-        } else if (error.message.includes('500')) {
+        } else if (error.message.includes("500")) {
           setError("Erro interno do servidor. Tente novamente mais tarde.")
-        } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
+        } else if (error.message.includes("NetworkError") || error.message.includes("fetch")) {
           setError("Erro de conexão. Verifique se o servidor está rodando na porta 8000.")
         } else {
           setError("Erro inesperado. Tente novamente.")
@@ -198,7 +195,7 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
   const handleSocialLogin = async (provider: string) => {
     setIsLoading(true)
     setError("")
-    
+
     // Login social não está implementado no backend atual
     // Desabilitar por enquanto
     setError(`Login via ${provider} não está disponível no momento`)
@@ -210,12 +207,12 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
       setError("Digite seu email primeiro para recuperar a senha")
       return
     }
-    
+
     if (!validateEmail(email)) {
       setError("Digite um email válido para recuperar a senha")
       return
     }
-    
+
     // Recuperação de senha não está implementada no backend atual
     alert(`Funcionalidade de recuperação de senha será implementada em breve para: ${email}`)
   }
@@ -250,7 +247,8 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm">
             <p className="text-green-800 font-medium mb-1">🚀 Conectado ao Backend</p>
             <p className="text-green-700">
-              <strong>Endpoint:</strong> http://localhost:8000/users<br />
+              <strong>Endpoint:</strong> http://localhost:8000/users
+              <br />
               <strong>Método:</strong> GET (busca todos os usuários para autenticação)
             </p>
           </div>
@@ -259,7 +257,8 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
             <p className="text-blue-800 font-medium mb-1">💡 Para fazer login:</p>
             <p className="text-blue-700">
-              Você precisa ter um usuário cadastrado no banco de dados.<br />
+              Você precisa ter um usuário cadastrado no banco de dados.
+              <br />
               Use a tela de cadastro ou insira um usuário diretamente no MySQL.
             </p>
           </div>
@@ -292,8 +291,8 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                     Senha
                   </label>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={handleForgotPassword}
                     className="text-sm text-pink-500 hover:text-pink-600 transition-colors"
                   >
@@ -362,7 +361,7 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
               <div className="mt-6 grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => handleSocialLogin('Google')}
+                  onClick={() => handleSocialLogin("Google")}
                   disabled={true}
                   className="inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-400 bg-gray-100 cursor-not-allowed"
                 >
@@ -370,7 +369,7 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleSocialLogin('Facebook')}
+                  onClick={() => handleSocialLogin("Facebook")}
                   disabled={true}
                   className="inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-400 bg-gray-100 cursor-not-allowed"
                 >
@@ -399,3 +398,4 @@ export default function Login({ onBackToHome, onNavigateToRegister, onLoginSucce
     </div>
   )
 }
+

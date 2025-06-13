@@ -131,10 +131,10 @@ export default function Register({ onBackToHome, onNavigateToLogin }: RegisterPr
     setIsLoading(true)
 
     try {
-      const response = await fetch('http://localhost:8000/users', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8000/users", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           user_name: formData.user_name,
@@ -145,12 +145,12 @@ export default function Register({ onBackToHome, onNavigateToLogin }: RegisterPr
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.message || 'Erro ao criar conta')
+        throw new Error(errorData.message || "Erro ao criar conta")
       }
 
       const userData = await response.json()
       alert("Cadastro realizado com sucesso! Bem-vindo à Cosmetix!")
-      
+
       // Limpar formulário após sucesso
       setFormData({
         user_name: "",
@@ -158,19 +158,18 @@ export default function Register({ onBackToHome, onNavigateToLogin }: RegisterPr
         user_password: "",
         confirmPassword: "",
       })
-      
     } catch (error) {
-      console.error('Erro no cadastro:', error)
-      
+      console.error("Erro no cadastro:", error)
+
       if (error instanceof Error) {
         // Verificar se é erro de email já existente
-        if (error.message.includes('email') || error.message.includes('já existe')) {
-          setErrors({ user_email: 'Este email já está cadastrado' })
+        if (error.message.includes("email") || error.message.includes("já existe")) {
+          setErrors({ user_email: "Este email já está cadastrado" })
         } else {
           alert(`Erro ao criar conta: ${error.message}`)
         }
       } else {
-        alert('Erro ao criar conta. Verifique sua conexão e tente novamente.')
+        alert("Erro ao criar conta. Verifique sua conexão e tente novamente.")
       }
     } finally {
       setIsLoading(false)
@@ -377,3 +376,4 @@ export default function Register({ onBackToHome, onNavigateToLogin }: RegisterPr
     </div>
   )
 }
+
